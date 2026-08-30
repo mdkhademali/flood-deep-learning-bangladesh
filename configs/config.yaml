@@ -1,0 +1,173 @@
+# ==============================================================================
+# config.yaml
+# Central configuration for the Sentinel-1 SAR Flood Extent Mapping pipeline
+# ==============================================================================
+
+project:
+  name: "flood-deep-learning-bangladesh"
+  title: "Deep Learning-Based Multi-Temporal Flood Extent Mapping Using Sentinel-1 SAR"
+  random_seed: 42
+  debug: false          # if true, use a tiny subset of data for a fast smoke-test run
+  debug_num_patches: 32
+
+# ------------------------------------------------------------------------------
+# Study area: Kurigram District, Rangpur Division, Bangladesh
+# Rationale (see docs/methodology.md, Section 3.1):
+#   - Located on the Brahmaputra-Jamuna river system, one of the most
+#     flood-prone districts in Bangladesh (annual riverine + char flooding)
+#   - Well documented historical flood events (e.g. June-July 2020, 2022 floods)
+#   - Sentinel-1 IW GRD coverage is dense and consistent (ascending + descending)
+#   - Moderate spatial extent (~2,245 sq km) keeps the project computationally
+#     tractable on limited hardware while remaining scientifically meaningful
+# ------------------------------------------------------------------------------
+study_area:
+  name: "Kurigram District, Bangladesh"
+  admin_level: "district (zila)"
+  division: "Rangpur"
+  country: "Bangladesh"
+  bbox:              # [min_lon, min_lat, max_lon, max_lat] (WGS84)
+    - 89.55
+    - 25.45
+    - 89.95
+    - 26.05
+  crs_geographic: "EPSG:4326"
+  crs_projected: "EPSG:32646"   # UTM Zone 46N — appropriate for area/distance calc in Bangladesh
+
+# ------------------------------------------------------------------------------
+# Flood events analyzed (multi-temporal). Dates are illustrative acquisition
+# windows chosen around documented 2020 and 2022 monsoon flood peaks; exact
+# available Sentinel-1 scene dates are resolved at export time in GEE.
+# ------------------------------------------------------------------------------
+flood_events:
+  - name: "2020_monsoon_flood"
+    pre_flood_window: ["2020-06-01", "2020-06-15"]
+    peak_flood_window: ["2020-07-15", "2020-07-31"]
+    post_flood_window: ["2020-09-01", "2020-09-15"]
+  - name: "2022_monsoon_flood"
+    pre_flood_window: ["2022-05-15", "2022-05-31"]
+    peak_flood_window: ["2022-06-18", "2022-07-05"]
+    post_flood_window: ["2022-08-15", "2022-08-31"]
+
+# ------------------------------------------------------------------------------
+# Sentinel-1 acquisition parameters (Google Earth Engine)
+# ------------------------------------------------------------------------------
+sentinel1:
+  collection: "COPERNICUS/S1_GRD"
+  instrument_mode: "IW"
+  polarizations: ["VV", "VH"]
+  orbit_pass: "DESCENDING"   # keep orbit consistent across dates to reduce incidence-angle effects
+  resolution_m: 10
+
+# Supporting datasets
+supporting_data:
+  jrc_water: "JRC/GSW1_4/GlobalSurfaceWater"
+  dem: "USGS/SRTMGL1_003"
+  chirps: "UCSB-CHG/CHIRPS/DAILY"
+  sentinel2: "COPERNICUS/S2_SR_HARMONIZED"
+  admin_boundaries: "FAO/GAUL/2015/level2"
+
+# ------------------------------------------------------------------------------
+# Data / patch generation
+# ------------------------------------------------------------------------------
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  patch_size: 256
+  patch_stride: 128
+  train_region_frac: 0.6     # spatial (not random-pixel) split — see docs/methodology.md 3.5
+  val_region_frac: 0.2
+  test_region_frac: 0.2
+  nodata_value: -9999
+
+# ------------------------------------------------------------------------------
+# Feature engineering (for RF / XGBoost baseline)
+# ------------------------------------------------------------------------------
+features:
+  base_bands: ["VV", "VH"]
+  derived:
+    - "VV_VH_ratio"
+    - "VV_VH_diff"
+    - "VV_change"          # peak minus pre-flood VV
+    - "VH_change"
+    - "glcm_contrast_VV"   # texture feature
+
+# ------------------------------------------------------------------------------
+# Baseline ML models
+# ------------------------------------------------------------------------------
+baseline_ml:
+  random_forest:
+    n_estimators: 300
+    max_depth: 20
+    min_samples_leaf: 5
+    n_jobs: -1
+  xgboost:
+    n_estimators: 300
+    max_depth: 8
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+
+# ------------------------------------------------------------------------------
+# U-Net deep learning model
+# ------------------------------------------------------------------------------
+model:
+  architecture: "unet"
+  in_channels: 2          # VV, VH (Experiment B); Experiment A uses 1, Experiment C uses 5
+  num_classes: 1           # binary flood / non-flood, sigmoid output
+  base_filters: 32
+  depth: 4
+  dropout: 0.2
+  use_batchnorm: true
+  loss: "bce_dice"          # combined Binary Cross-Entropy + Dice loss
+
+# ------------------------------------------------------------------------------
+# Training
+# ------------------------------------------------------------------------------
+training:
+  epochs: 60
+  batch_size: 8
+  learning_rate: 0.0003
+  optimizer: "adam"
+  weight_decay: 0.00001
+  scheduler: "reduce_on_plateau"
+  scheduler_patience: 5
+  early_stopping_patience: 12
+  num_workers: 2
+  checkpoint_dir: "outputs/models"
+  log_dir: "outputs/metrics"
+
+# ------------------------------------------------------------------------------
+# Augmentation
+# ------------------------------------------------------------------------------
+augmentation:
+  horizontal_flip_p: 0.5
+  vertical_flip_p: 0.5
+  rotate90_p: 0.5
+  random_crop: false   # patches already fixed-size; crop disabled by default
+
+# ------------------------------------------------------------------------------
+# Experiments (ablation, Section 20)
+# ------------------------------------------------------------------------------
+experiments:
+  A_vv_only:
+    bands: ["VV"]
+  B_vv_vh:
+    bands: ["VV", "VH"]
+  C_vv_vh_derived:
+    bands: ["VV", "VH", "VV_VH_ratio", "VV_VH_diff", "glcm_contrast_VV"]
+
+# ------------------------------------------------------------------------------
+# Evaluation
+# ------------------------------------------------------------------------------
+evaluation:
+  metrics: ["accuracy", "precision", "recall", "f1", "iou", "dice", "kappa"]
+  threshold: 0.5
+
+# ------------------------------------------------------------------------------
+# Figures
+# ------------------------------------------------------------------------------
+figures:
+  dpi: 300
+  formats: ["png", "pdf"]
+  figsize_map: [8, 8]
+  figsize_plot: [7, 5]

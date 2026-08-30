@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Data (large raster files should not be committed — see data/README.md)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Model checkpoints & large outputs
+outputs/models/*
+!outputs/models/.gitkeep
+outputs/figures/*
+!outputs/figures/.gitkeep
+outputs/maps/*
+!outputs/maps/.gitkeep
+outputs/metrics/*.log
+outputs/metrics/*.json
+!outputs/metrics/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

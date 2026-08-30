@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software or methodology, please cite it as below."
+title: "Deep Learning-Based Multi-Temporal Flood Extent Mapping Using Sentinel-1 SAR: A GeoAI Framework for Flood Dynamics Assessment in Bangladesh"
+authors:
+  - family-names: Ali
+    given-names: "Md Khadem"
+    affiliation: "Centre for Environmental Research & Innovation (CERI); Department of Geography and Environment, National University, Bangladesh"
+date-released: 2026-08-30
+version: "1.0.0"
+repository-code: "https://github.com/mdkhademali/flood-deep-learning-bangladesh"
+license: MIT
+keywords:
+  - remote sensing
+  - GeoAI
+  - deep learning
+  - Sentinel-1
+  - SAR
+  - flood mapping
+  - Bangladesh
+  - semantic segmentation
+  - U-Net
+# NOTE: no DOI has been minted for this repository yet. If archived via
+# Zenodo or a similar service, add the resulting DOI field here.

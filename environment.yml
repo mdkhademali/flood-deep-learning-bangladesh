@@ -1,0 +1,22 @@
+name: flood-deep-learning-bd
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.11
+  - numpy>=1.24
+  - pandas>=2.0
+  - geopandas>=0.14
+  - rasterio>=1.3
+  - shapely>=2.0
+  - scikit-learn>=1.3
+  - scikit-image>=0.21
+  - matplotlib>=3.7
+  - pyyaml>=6.0
+  - joblib>=1.3
+  - pytest>=7.4
+  - pytorch>=2.0
+  - cpuonly   # remove this line if a CUDA GPU is available
+  - pip
+  - pip:
+      - xgboost>=2.0
