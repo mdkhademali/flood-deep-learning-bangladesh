@@ -1,4 +1,4 @@
-# Deep Learning-Based Multi-Temporal Flood Extent Mapping Using Sentinel-1 SAR: A GeoAI Framework for Flood Dynamics Assessment in Bangladesh**
+# Deep Learning-Based Multi-Temporal Flood Extent Mapping Using Sentinel-1 SAR: A GeoAI Framework for Flood Dynamics Assessment in Bangladesh
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.x-ee4c2c)
